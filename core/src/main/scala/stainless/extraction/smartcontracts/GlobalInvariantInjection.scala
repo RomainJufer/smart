@@ -92,15 +92,19 @@ trait GlobalInvariantInjection extends oo.SimplePhase
 
     //val giAddressOfDiffExpr = buildAddressOfDiffExpr(addressOfs)
 
-    val giInvariantAndExpr = contracts.map{ case contract =>
+    val giFoundation = (envTarget:Expr) => contracts.map{ case contract => 
       val contractType = contract.typed.toType
       val addressOf = symbols.lookup[FunDef](s"addressOf${contract.id}")
-      And(
-        IsInstanceOf(
+      IsInstanceOf(
           MutableMapApply(
-            ClassSelector(This(envCd.typed.toType), contractAtAccessor),
+            ClassSelector(envTarget, contractAtAccessor),
               FunctionInvocation(addressOf.id, Nil, Nil)),
-          contractType),
+          contractType)
+    }.foldLeft[Expr](BooleanLiteral(true))(And(_, _))
+
+    val giLocalInvariantCall = contracts.map{ case contract =>
+      val contractType = contract.typed.toType
+      val addressOf = symbols.lookup[FunDef](s"addressOf${contract.id}")
         MethodInvocation(
           AsInstanceOf(
             MutableMapApply(
@@ -110,15 +114,15 @@ trait GlobalInvariantInjection extends oo.SimplePhase
           invariants(contract.id),
           Seq(),
           Seq(This(envType)))
-      )
     }.foldLeft[Expr](BooleanLiteral(true))(And(_, _))
+
 
     val environmentInvariant = new FunDef (
       ast.SymbolIdentifier("invariant"),
       Seq(),
       Seq(),
       BooleanType(),
-      giInvariantAndExpr,
+      And(giFoundation(This(envCd.typed.toType)), giLocalInvariantCall),
       Seq(Synthetic, Final, Ghost, IsMethodOf(envCd.id))
     )
 
@@ -136,11 +140,6 @@ trait GlobalInvariantInjection extends oo.SimplePhase
         val Lambda(vds, bdy) = postconditionOf(fd.fullBody).getOrElse(Lambda(Seq(ValDef.fresh("res", fd.returnType)), BooleanLiteral(true)))
 
         val contractId = fd.flags.collectFirst{ case IsMethodOf(id) => id}.get
-        /*val addrExpr = Equals(
-                          MutableMapApply(
-                            ClassSelector(envVar, contractAtAccessor),
-                              FunctionInvocation(addressOfMap(contract).id, Nil, Nil)),
-                          This(contractInterfaceType))*/
 
         val newBody = postMap {
           case FunctionInvocation(id, Seq(), Seq()) if isIdentifier("stainless.smartcontracts.Environment.invariant", id) =>
@@ -150,8 +149,10 @@ trait GlobalInvariantInjection extends oo.SimplePhase
         }(withoutSpecs(fd.fullBody).getOrElse(NoTree(UnitType())))
 
         val callEnvInvariant = MethodInvocation(envVar, environmentInvariant.id, Seq(), Seq())
-        val newPre = Precondition(And(currentPre, callEnvInvariant))
+        val newPre = if(!fd.isConstructor) Precondition(And(currentPre, callEnvInvariant))
+                     else Precondition(And(currentPre, giFoundation(envVar)))
         val newPost = Postcondition(Lambda(vds, And(bdy, callEnvInvariant)))
+
         super.transform(fd.copy(fullBody = reconstructSpecs(Seq(newPre, newPost), Some(newBody), fd.returnType))
                                 .copiedFrom(fd))
 
