@@ -59,7 +59,7 @@ trait EnvironmentBuilder extends oo.SimplePhase
     val implicitParameters:FunDef => Set[ImplicitParams] = fd => fd match {
       case fd if fd.isContractMethod                                                       => Set(EnvImplicit, MsgImplicit)
       case fd if fd.isInvariant                                                            => Set(EnvImplicit)
-      case fd if isIdentifier("stainless.smartcontracts.PayableAddress.transfer", fd.id)   => Set(EnvImplicit)
+      case fd if isIdentifier("stainless.smartcontracts.PayableAddress.transfer", fd.id)   => Set(EnvImplicit, MsgImplicit)
       case fd if isIdentifier("stainless.smartcontracts.PayableAddress.balance", fd.id)    => Set(EnvImplicit)
       case fd if isIdentifier("stainless.smartcontracts.Address.balance", fd.id)           => Set(EnvImplicit)
       //case fd if isIdentifier("stainless.smartcontracts.Environment.balanceOf", fd.id)     => Set(EnvImplicit)
