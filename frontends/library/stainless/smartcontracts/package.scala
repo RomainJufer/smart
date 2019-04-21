@@ -106,6 +106,8 @@ package object smartcontracts {
     }
   }
 
+  @library
+  @keep("smart-contracts")
   object Msg {
     @extern @library
     def sender: PayableAddress = ???
@@ -133,7 +135,7 @@ package object smartcontracts {
 
     @library
     final def transfer(amount: Uint256): Unit = {
-      dynRequire(Environment.balanceOf(Msg.sender) >= amount)
+      dynRequire(Msg.sender.balance >= amount)
       Environment.updateBalance(Msg.sender, this, amount)
     }
   }
