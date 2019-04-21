@@ -149,8 +149,8 @@ trait GlobalInvariantInjection extends oo.SimplePhase
         }(withoutSpecs(fd.fullBody).getOrElse(NoTree(UnitType())))
 
         val callEnvInvariant = MethodInvocation(envVar, environmentInvariant.id, Seq(), Seq())
-        val newPre = if(!fd.isConstructor) Precondition(And(currentPre, callEnvInvariant))
-                     else Precondition(And(currentPre, giFoundation(envVar)))
+        val newPre = if(!fd.isConstructor) Precondition(And(callEnvInvariant, currentPre))
+                     else Precondition(And(giFoundation(envVar), currentPre))
         val newPost = Postcondition(Lambda(vds, And(bdy, callEnvInvariant)))
 
         super.transform(fd.copy(fullBody = reconstructSpecs(Seq(newPre, newPost), Some(newBody), fd.returnType))
