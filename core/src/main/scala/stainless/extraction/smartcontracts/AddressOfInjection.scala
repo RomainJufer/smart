@@ -34,16 +34,17 @@ trait AddressOfInjection extends oo.SimplePhase
     val contractAtId = envCd.fields.find(vd => isIdentifier("stainless.smartcontracts.Environment.contractAt", vd.id)).get.id
 
     val addressOfs = contracts.map( cd => {
-        context.reporter.info(s"Create addressOf for ${cd.id}")
-        new FunDef(
-          ast.SymbolIdentifier("addressOf" + cd.id),
-          Seq(),
-          Seq(),
-          addressType,
-          NoTree(addressType),
-          Seq(Synthetic, IsPure)
-        )
-      }).toSeq
+      context.reporter.info(s"Create addressOf for ${cd.id}")
+      new FunDef(
+        ast.SymbolIdentifier("addressOf" + cd.id),
+        Seq(),
+        Seq(),
+        addressType,
+        NoTree(addressType),
+        Seq(Synthetic, IsPure)
+      )
+    }).toSeq
+      
 
     val addressOfMap = contracts.map(_.id).zip(addressOfs).toMap
 
@@ -57,14 +58,17 @@ trait AddressOfInjection extends oo.SimplePhase
             }.get
 
             val newBody = postMap {
+                case m@MethodInvocation(This(tp), id, _, _) if isIdentifier("stainless.smartcontracts.ContractInterface.addr", id) =>
+                  Some(FunctionInvocation(addressOfMap(contract).id, Seq(), Seq()))
+                  
                 case m@MethodInvocation(This(_), id, Seq(), args) if symbols.functions(id).isAccessor =>
-                    Some(MethodInvocation(
-                            AsInstanceOf(
-                                MutableMapApply(
-                                    ClassSelector(envVar, contractAtId),
-                                    FunctionInvocation(addressOfMap(contract).id, Seq(), Seq()))
-                            , contractType).copiedFrom(m)
-                            , id, Seq(), args).copiedFrom(m))
+                  Some(MethodInvocation(
+                          AsInstanceOf(
+                              MutableMapApply(
+                                  ClassSelector(envVar, contractAtId),
+                                  FunctionInvocation(addressOfMap(contract).id, Seq(), Seq()))
+                          , contractType).copiedFrom(m)
+                          , id, Seq(), args).copiedFrom(m))
 
                 case e => None
 
