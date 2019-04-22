@@ -2,7 +2,6 @@ import stainless.smartcontracts._
 import stainless.annotation._
 
 trait CallWithEther1 extends Contract {
-
   val other: CallWithEther1
 
   @solidityPublic
@@ -12,7 +11,7 @@ trait CallWithEther1 extends Contract {
       other.addr.balance == Uint256("0")
     )
 
-    pay(other.bar(), Uint256("50"))
+    pay(other.bar, Uint256("50"))
   } ensuring { _ =>
     other.addr.balance == Uint256("50") &&
     this.addr.balance == Uint256("0")

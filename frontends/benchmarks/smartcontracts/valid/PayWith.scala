@@ -8,16 +8,16 @@ trait Target extends Contract {
 }
 
 trait Source extends Contract {
-  val targetContract: Target
+  val targetContract: Address
+
+  @library
+  final def invariant() = Environment.contractAt(targetContract).isInstanceOf[Target]
 
   @solidityPublic
-  def send() = {
-    require (
-      this.addr.balance >= Uint256("50") &&
-      targetContract.addr.balance == Uint256("0")
-    )
+  final def send() = {
+    dynRequire(addr.balance >= Uint256("20"))
 
-    pay(targetContract.receiveMoney, Uint256("20"))
-    assert(targetContract.addr.balance >= Uint256("20"))
+    pay(Environment.contractAt(targetContract).asInstanceOf[Target].receiveMoney, Uint256("20"))
+    assert(targetContract.balance >= Uint256("20"))
   }
 }
