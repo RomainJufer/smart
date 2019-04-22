@@ -101,6 +101,9 @@ package object smartcontracts {
   ) {
     @library
     final def updateBalance(from: Address, to: Address, amnt: Uint256): Unit = {
+      dynRequire(balances(from) >= amnt)
+      dynRequire(balances(to) + amnt >= balances(to))
+      
       balances(from) = balances(from) - amnt
       balances(to) = balances(to) + amnt
     }
@@ -125,6 +128,13 @@ package object smartcontracts {
   case class Address(id: BigInt) {
     @library
     final def balance = Environment.balanceOf(this)
+
+    @library
+    override final def equals(other: Any) = other match {
+      case Address(idd) => idd == id
+      case PayableAddress(idd) => idd == id
+      case _ => false
+    }
   }
 
   @library
@@ -138,9 +148,16 @@ package object smartcontracts {
       dynRequire(Msg.sender.balance >= amount)
       Environment.updateBalance(Msg.sender, this, amount)
     }
+
+    @library
+    override final def equals(other: Any) = payableAddressToAddress(this).equals(other)
   }
 
   implicit def payableAddressToAddress(a: PayableAddress): Address = Address(a.id)
+
+  @library
+  @keep("smart-contracts")
+  def toPayableAddress(a: Address): PayableAddress = PayableAddress(a.id)
 
   @library @mutable
   trait ContractInterface {
