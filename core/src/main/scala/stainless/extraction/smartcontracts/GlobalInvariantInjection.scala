@@ -146,7 +146,7 @@ trait GlobalInvariantInjection extends oo.SimplePhase
             Some(MethodInvocation(envVar, environmentInvariant.id, Seq(), Seq()))
 
           case _ => None
-        }(withoutSpecs(fd.fullBody).getOrElse(NoTree(UnitType())))
+        }(withoutSpecs(fd.fullBody).getOrElse(NoTree(fd.returnType)))
 
         val callEnvInvariant = MethodInvocation(envVar, environmentInvariant.id, Seq(), Seq())
         val newPre = if(!fd.isConstructor) Precondition(And(callEnvInvariant, currentPre))
