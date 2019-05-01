@@ -10,7 +10,7 @@ trait Target extends Contract {
 trait Source extends Contract {
   val targetContract: Address
 
-  @library
+  @ghost
   final def invariant() = Environment.contractAt(targetContract).isInstanceOf[Target]
 
   @solidityPublic
