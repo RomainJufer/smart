@@ -1,23 +1,28 @@
 import stainless.smartcontracts._
-import stainless.lang._
 import stainless.annotation._
 import stainless.lang._
 
 trait UnknownInterfaceA extends Contract {
+  @solidityPublic
   def balance(a: Address): Uint256
+
+  @solidityPublic
   def transfer(from: Address, to: Address, amount: Uint256)
 
+  @ghost
   final def invariant() = true
 }
 
-trait OCMB extends Contract {
+trait TCIB extends Contract {
   var balance: Uint256
   var target: Address
 
-  final def invariant() = 
+  @ghost
+  final def invariant() =
     balance >= Uint256.ONE &&
     Environment.contractAt(target).isInstanceOf[UnknownInterfaceA]
 
+  @solidityPublic
   final def transfer(to: Address, amount: Uint256):Unit = {
     require(
       // Needed to avoid overflow. Temporary
@@ -30,19 +35,22 @@ trait OCMB extends Contract {
     }
   }
 
-  final def balance(a: Address) = {
+  @solidityPublic
+  final def getBalance(a: Address) = {
     Environment.contractAt(target).asInstanceOf[UnknownInterfaceA].balance(a)
   }
 }
 
-trait OCMA extends Contract {
+trait TCIA extends Contract {
   val target:Address
 
-  final def invariant() = Environment.contractAt(target).isInstanceOf[OCMB] &&
-                          Environment.contractAt(target).asInstanceOf[OCMB].invariant()
+  @ghost
+  final def invariant() = Environment.contractAt(target).isInstanceOf[TCIB] &&
+                          Environment.contractAt(target).asInstanceOf[TCIB].invariant()
 
+  @solidityPublic
   final def foo() = {
-    Environment.contractAt(target).asInstanceOf[OCMB].transfer(this.addr, Uint256.ONE)
+    Environment.contractAt(target).asInstanceOf[TCIB].transfer(this.addr, Uint256.ONE)
   }
 
 }
