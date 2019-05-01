@@ -12,7 +12,7 @@ trait C1 extends Contract {
 trait C2 extends Contract {
   val a: Address
 
-  @library
+  @ghost
   final def invariant() = Environment.contractAt(a).isInstanceOf[C1]
 
   @solidityView
