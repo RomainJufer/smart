@@ -25,16 +25,14 @@ trait HavocInvariant2A extends Contract {
 
   @ghost
   @library
-  final def invariant(): Boolean = true
+  final def invariant(): Boolean = {
+    Environment.contractAt(target).isInstanceOf[HavocInvariant2B] &&
+    Environment.contractAt(target).asInstanceOf[HavocInvariant2B].invariant()
+  }
 
   @solidityPublic
-  final def withdrawBalance() = {
-    require(
-      Environment.contractAt(target).isInstanceOf[HavocInvariant2B]
-    )
-    
+  final def withdrawBalance() = { 
     Environment.contractAt(target).asInstanceOf[HavocInvariant2B].emptyContract()
-    assert(Environment.contractAt(target).asInstanceOf[HavocInvariant2B].invariant())
     assert(Environment.contractAt(target).asInstanceOf[HavocInvariant2B].invariant())
   }
 }
