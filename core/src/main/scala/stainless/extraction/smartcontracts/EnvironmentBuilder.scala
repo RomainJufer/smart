@@ -71,37 +71,6 @@ trait EnvironmentBuilder extends oo.SimplePhase
       case _                                                                               => Set.empty
     }
 
-    /*val directParameters: Map[Identifier, Set[ImplicitParams]] = {
-      allFunctions.map { fd =>
-        fd.id -> {
-          collect[ImplicitParams] {
-            case mi: MethodInvocation if isIdentifier("stainless.smartcontracts.PayableAddress.transfer", mi.id) => Set(MsgImplicit, EnvImplicit)
-            case mi: MethodInvocation if isIdentifier("stainless.smartcontracts.PayableAddress.balance", mi.id) => Set(EnvImplicit)
-            case mi: MethodInvocation if isIdentifier("stainless.smartcontracts.Address.balance", mi.id) => Set(EnvImplicit)
-            case mi: MethodInvocation if symbols.functions(mi.id).isContractMethod => Set(EnvImplicit)
-            case fi: FunctionInvocation if isIdentifier("stainless.smartcontracts.Msg.sender", fi.id) => Set(EnvImplicit, MsgImplicit)
-            case fi: FunctionInvocation if isIdentifier("stainless.smartcontracts.Msg.value", fi.id) => Set(EnvImplicit, MsgImplicit)
-            case fi: FunctionInvocation if isIdentifier("stainless.smartcontracts.Environment.balanceOf", fi.id) => Set(EnvImplicit)
-            case fi: FunctionInvocation if isIdentifier("stainless.smartcontracts.Environment.updateBalance", fi.id) => Set(EnvImplicit)
-            case fi: FunctionInvocation if isIdentifier("stainless.smartcontracts.Environment.contractAt", fi.id) => Set(EnvImplicit)
-            case fi: FunctionInvocation if isIdentifier("stainless.smartcontracts.pay", fi.id) => Set(EnvImplicit)
-            case _ => Set()
-          }(fd.fullBody) ++
-          (if (fd.flags.exists(_ == Payable)) Some(MsgImplicit) else None)
-        }  
-      }.toMap
-    }
-
-    val requiredParameters: Map[Identifier, Set[ImplicitParams]] = {
-      allFunctions.map { fd  =>
-        if (fd.isAccessor)
-          fd.id -> Set.empty[ImplicitParams]
-        else
-          fd.id -> ((symbols.dependencies(fd.id) + fd.id).flatMap(directParameters.getOrElse(_, Set())) ++
-                   (if(fd.isContractMethod) Set(EnvImplicit) else Set()))
-      }.toMap
-    }*/
-
     def bodyPreProcessing(body: s.Expr, msg: Variable, env: Variable, contractType: Option[ClassType]) = {
       val msgSender = MethodInvocation(msg, senderAccessorId, Seq(), Seq())
       val msgAmount = MethodInvocation(msg, amountAccessorId, Seq(), Seq())
@@ -127,24 +96,6 @@ trait EnvironmentBuilder extends oo.SimplePhase
 
         case fi@FunctionInvocation(id, Seq(), args) if isIdentifier("stainless.smartcontracts.Environment.updateBalance", id) =>
           Some(MethodInvocation(env, envUpdateBalance.id, Seq(), args).setPos(fi))
-
-        /*case fi@FunctionInvocation(id, _, Seq(method: MethodInvocation, amount)) if isIdentifier("stainless.smartcontracts.pay", id) =>
-          if(!symbols.getFunction(method.id).isPayable)
-            throw SmartcontractException(method, "The function must be annotated as payable")
-
-          if(!symbols.getFunction(method.id).isInSmartContract)
-            throw SmartcontractException(method, "The function must be a method of a contract class or interface")
-
-          val senderAddress = MethodInvocation(This(contractType.get), addressAccessor.id, Seq(), Seq()).setPos(fi)
-          val transformedReceiver = transform(method.receiver)
-          val receiverAddress = MethodInvocation(transformedReceiver, addressAccessor.id, Seq(), Seq()).setPos(fi)
-          val envUpdateCall = MethodInvocation(env, envUpdateBalance.id, Seq(), Seq(senderAddress, receiverAddress, amount))
-
-          val newMsg = ClassConstructor(msgType, Seq(addr, uzero))
-          val newMethodCall = MethodInvocation(transformedReceiver, method.id, Seq(), method.args ++ Seq(env, newMsg))
-
-          Some(t.Block(Seq(envUpdateCall), newMethodCall).setPos(fi))*/
-      
 
         case e =>
           None
