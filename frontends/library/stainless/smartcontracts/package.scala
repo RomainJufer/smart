@@ -103,7 +103,7 @@ package object smartcontracts {
     final def updateBalance(from: Address, to: Address, amnt: Uint256): Unit = {
       dynRequire(balances(from) >= amnt)
       dynRequire(balances(to) + amnt >= balances(to))
-      
+
       balances(from) = balances(from) - amnt
       balances(to) = balances(to) + amnt
     }
@@ -160,20 +160,14 @@ package object smartcontracts {
   def toPayableAddress(a: Address): PayableAddress = PayableAddress(a.id)
 
   @library @mutable
+  @keep("smart-contracts")
   trait ContractInterface {
     val addr: Address
-
-    @library
-    final def selfdestruct(recipient: PayableAddress):Unit = {
-      recipient.transfer(addr.balance)
-    }
   }
 
   @library @mutable
-  trait Contract extends ContractInterface {
-    //@extern @ghost
-    //def havoc(): Unit
-  }
+  @keep("smart-contracts")
+  trait Contract extends ContractInterface
 
   @ignore
   sealed case class Uint8() {
