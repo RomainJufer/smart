@@ -59,19 +59,40 @@ trait ContractMethodLifting extends oo.SimplePhase
         val calleeVd = ValDef.fresh("callee", addressType)
         val newParams = fd.params :+ calleeVd
 
-        val newBody = processBody(fd.fullBody, envVar, calleeVd.toVariable)
-
+        val (Seq(pre,post), bodyOpt) = deconstructSpecs(processBody(fd.fullBody, envVar, calleeVd.toVariable))
         val calleeIsInstanceOf = IsInstanceOf(MutableMapApply(ClassSelector(envVar, contractAtId), calleeVd.toVariable), contractType)
-        val currPre = preconditionOf(newBody).getOrElse(BooleanLiteral(true))
-        val newPre = Precondition(And(calleeIsInstanceOf, currPre))
-
-        val Lambda(vds, body) = postconditionOf(newBody).getOrElse(Lambda(Seq(ValDef.fresh("res", fd.returnType)), BooleanLiteral(true)))
-        val newPost = Postcondition(Lambda(vds, And(calleeIsInstanceOf, body)))
+        val newBodyOpt = bodyOpt.map(body =>
+          if (fd.isContractMethod) body else And(calleeIsInstanceOf, body)
+        )
 
         super.transform(fd.copy(
           flags = fd.flags.filterNot{ case IsMethodOf(_) => true case _ => false},
           params = newParams,
-          fullBody = reconstructSpecs(Seq(newPre, newPost), Some(newBody), fd.returnType)
+          fullBody = reconstructSpecs(Seq(pre, post), newBodyOpt, fd.returnType)
+        ).copiedFrom(fd))
+
+      case fd if fd.isInvariant =>
+        val contract = symbols.classes(fd.findClass.get)
+        val contractType = contract.typed.toType
+
+        val envVar = fd.params.collectFirst{
+          case v@ValDef(_, tpe, _) if tpe == envType => v.toVariable
+        }.get
+
+        val calleeVd = ValDef.fresh("callee", addressType)
+        val newParams = fd.params :+ calleeVd
+
+        val calleeIsInstanceOf = IsInstanceOf(MutableMapApply(ClassSelector(envVar, contractAtId), calleeVd.toVariable), contractType)
+        val newBody =
+          And(
+            calleeIsInstanceOf,
+            processBody(fd.fullBody, envVar, calleeVd.toVariable)
+          )
+
+        super.transform(fd.copy(
+          flags = fd.flags.filterNot{ case IsMethodOf(_) => true case _ => false},
+          params = newParams,
+          fullBody = newBody
         ).copiedFrom(fd))
 
       case fd => super.transform(fd)
