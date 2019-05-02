@@ -27,7 +27,8 @@ package object smartcontracts {
   }
 
   val contractID = "stainless.smartcontracts.Contract"
-  
+  val contractInterfaceID = "stainless.smartcontracts.ContractInterface"
+
   def isIdentifier(name: String, id: Identifier) = id match {
     case ast.SymbolIdentifier(`name`) => true
     case _ => false

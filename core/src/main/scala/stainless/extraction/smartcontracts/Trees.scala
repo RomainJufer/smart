@@ -48,7 +48,8 @@ trait Trees extends methods.Trees { self =>
 
   implicit class SmartContractsClassDefWrapper(cd: ClassDef) {
     def isContract: Boolean = cd.parents.exists { acd =>
-      isIdentifier(contractID, acd.id)
+      isIdentifier(contractID, acd.id) ||
+      isIdentifier(contractInterfaceID, acd.id)
     }
   }
 
