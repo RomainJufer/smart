@@ -148,12 +148,12 @@ trait EnvironmentBuilder extends oo.SimplePhase
           val newArgs = args ++ paramsMapper(newMsg, env, implicitParameters(symbols.functions(mi.id)))
           Some(MethodInvocation(receiver, id, tps, newArgs).setPos(mi))
 
-        // Forwards to the previous message
+        // Forwards the previous message
         case v: MethodInvocation =>
           val newArgs = v.args ++ paramsMapper(msg, env, implicitParameters(symbols.functions(v.id)))
           Some(v.copy(args = newArgs).setPos(v))
 
-        // Forwards to the previous message
+        // Forwards the previous message
         case v: FunctionInvocation =>
           val newArgs = v.args ++ paramsMapper(msg, env, implicitParameters(symbols.functions(v.id)))
           Some(v.copy(args = newArgs).setPos(v))
@@ -172,7 +172,7 @@ trait EnvironmentBuilder extends oo.SimplePhase
         val envValDef = ValDef.fresh("env", envType)
 
         val newParams = paramsMapper(msgValDef, envValDef, implicitParameters(fd))
-        
+
         val contractType: Option[ClassType] = fd.flags.collectFirst {
           case IsMethodOf(cid) => symbols.getClass(cid).typed.toType
         }
