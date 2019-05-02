@@ -1,23 +1,25 @@
-import stainless.smartcontracts._
-import stainless.annotation._
+// FIXME: Equality between addresses and known external calls optimization
 
-trait Target extends Contract {
-  @solidityPayable
-  @solidityPublic
-  final def receiveMoney() = { }
-}
+// import stainless.smartcontracts._
+// import stainless.annotation._
 
-trait Source extends Contract {
-  val targetContract: Address
+// trait Target extends Contract {
+//   @solidityPayable
+//   @solidityPublic
+//   final def receiveMoney() = { }
+// }
 
-  @ghost
-  final def invariant() = Environment.contractAt(targetContract).isInstanceOf[Target]
+// trait Source extends Contract {
+//   val targetContract: Address
 
-  @solidityPublic
-  final def send() = {
-    dynRequire(addr.balance >= Uint256("20"))
+//   @ghost
+//   final def invariant() = Environment.contractAt(targetContract).isInstanceOf[Target]
 
-    pay(Environment.contractAt(targetContract).asInstanceOf[Target].receiveMoney, Uint256("20"))
-    assert(targetContract.balance >= Uint256("20"))
-  }
-}
+//   @solidityPublic
+//   final def send() = {
+//     dynRequire(addr.balance >= Uint256("20"))
+
+//     pay(Environment.contractAt(targetContract).asInstanceOf[Target].receiveMoney, Uint256("20"))
+//     assert(targetContract.balance >= Uint256("20"))
+//   }
+// }
