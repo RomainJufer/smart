@@ -65,7 +65,7 @@ trait ContractMethodLifting extends oo.SimplePhase
         val calleeContract = MutableMapApply(ClassSelector(envVar, contractAtId), calleeVd.toVariable)
         val calleeIsInstanceOf = IsInstanceOf(calleeContract, contractType)
         val calleeAddrEquality = Equals(calleeVd.toVariable,
-                                 MethodInvocation(AsInstanceOf(calleeContract, contractType), addrFieldId, Seq(), Seq()))
+          MethodInvocation(AsInstanceOf(calleeContract, contractType), addrFieldId, Seq(), Seq()))
 
         val newBodyOpt = bodyOpt.map(body =>
           if (fd.isContractMethod) body else And(And(calleeIsInstanceOf, calleeAddrEquality), body)
